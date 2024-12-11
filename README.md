@@ -76,7 +76,7 @@ ZenWall is licensed under the MIT License. See the `LICENSE` file for more detai
 
 ## Support
 
-If you encounter any issues or have suggestions, please open an issue on GitHub or contact us at [your email or support link].
+If you encounter any issues or have suggestions, please open an issue on GitHub or contact us at `ranjan.avinash@hotmail.com`.
 
 ---
 
