@@ -3,9 +3,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path_provider/path_provider.dart';
+import 'package:gal/gal.dart';
+
+final navigatorKey = GlobalKey<NavigatorState>();
 
 class ImageView extends StatefulWidget {
   final String imgPath;
@@ -26,6 +30,8 @@ class _ImageViewState extends State<ImageView> {
       throw 'Could not launch $url';
     }
   }
+
+  bool toAlbum = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,12 +65,9 @@ class _ImageViewState extends State<ImageView> {
                     onTap: () {
                       if (kIsWeb) {
                         _launchURL(widget.imgPath);
-                        //js.context.callMethod('downloadUrl',[widget.imgPath]);
-                        //response = await dio.download(widget.imgPath, "./xx.html");
                       } else {
                         _save();
                       }
-                      //Navigator.pop(context);
                     },
                     child: Stack(
                       children: <Widget>[
@@ -72,7 +75,7 @@ class _ImageViewState extends State<ImageView> {
                           width: MediaQuery.of(context).size.width / 2,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: Color(0xff1C1B1B).withOpacity(0.8),
+                            color: const Color(0xff1C1B1B).withOpacity(0.8),
                             borderRadius: BorderRadius.circular(40),
                           ),
                         ),
@@ -84,14 +87,14 @@ class _ImageViewState extends State<ImageView> {
                                 border:
                                     Border.all(color: Colors.white24, width: 1),
                                 borderRadius: BorderRadius.circular(40),
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                     colors: [
                                       Color(0x36FFFFFF),
                                       Color(0x0FFFFFFF)
                                     ],
                                     begin: FractionalOffset.topLeft,
                                     end: FractionalOffset.bottomRight)),
-                            child: Column(
+                            child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
                                 Text(
@@ -115,14 +118,14 @@ class _ImageViewState extends State<ImageView> {
                             )),
                       ],
                     )),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 InkWell(
                   onTap: () {
                     Navigator.pop(context);
                   },
-                  child: Text(
+                  child: const Text(
                     "Cancel",
                     style: TextStyle(
                         color: Colors.white60,
@@ -130,7 +133,7 @@ class _ImageViewState extends State<ImageView> {
                         fontWeight: FontWeight.w500),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 50,
                 )
               ],
@@ -141,14 +144,55 @@ class _ImageViewState extends State<ImageView> {
     );
   }
 
-  _save() async {
-    await _askPermission();
-    var response = await Dio().get(widget.imgPath,
-        options: Options(responseType: ResponseType.bytes));
-    final result =
-        await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
-    print(result);
-    Navigator.pop(context);
+  Future<void> _save() async {
+    try {
+      final permissionGranted = await _askPermission();
+      if (!permissionGranted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text("Storage permission is required to save the image")),
+        );
+        return;
+      }
+      final tempDir = await getTemporaryDirectory();
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final filePath = '${tempDir.path}/$fileName.jpg';
+
+      var response = await Dio().get(
+        widget.imgPath,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      final file = File(filePath);
+      await file.writeAsBytes(response.data);
+
+      await Gal.putImage(filePath, album: album);
+      showSnackbar();
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Error saving image: $e");
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("An error occurred while saving the image")),
+      );
+    }
+  }
+
+  String? get album => toAlbum ? 'Album' : null;
+
+  void showSnackbar() {
+    final context = navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: const Text('Saved! ✅'),
+      action: SnackBarAction(
+        label: 'Gallery ->',
+        onPressed: () async => Gal.open(),
+      ),
+    ));
   }
 
   _askPermission() async {
