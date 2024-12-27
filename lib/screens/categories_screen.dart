@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:zenwall/data/data.dart';
 import 'package:zenwall/models/photos_model.dart';
-import 'package:zenwall/widget/widget.dart';
+import 'package:zenwall/widgets/wallpaper.dart';
 
-class CategorieScreen extends StatefulWidget {
+class CategoriesScreen extends StatefulWidget {
   final String categorie;
 
-  const CategorieScreen({super.key, required this.categorie});
+  const CategoriesScreen({super.key, required this.categorie});
 
   @override
-  State<CategorieScreen> createState() => _CategorieScreenState();
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategorieScreenState extends State<CategorieScreen> {
+class _CategoriesScreenState extends State<CategoriesScreen> {
   List<PhotosModel> photos = [];
 
   getCategorieWallpaper() async {
@@ -43,7 +43,11 @@ class _CategorieScreenState extends State<CategorieScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: brandName(),
+        title: Text(
+          widget.categorie,
+          style: const TextStyle(color: Colors.black),
+        ),
+        centerTitle: true,
         elevation: 0.0,
         actions: <Widget>[
           Container(
@@ -55,7 +59,9 @@ class _CategorieScreenState extends State<CategorieScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        child: wallPaper(photos, context),
+        child: Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Wallpaper(listPhotos: photos)),
       ),
     );
   }

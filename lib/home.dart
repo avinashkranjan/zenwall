@@ -1,15 +1,13 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:zenwall/data/data.dart';
-import 'dart:convert';
-import 'package:zenwall/models/categorie_model.dart';
+import 'package:zenwall/models/categories_model.dart';
 import 'package:zenwall/models/photos_model.dart';
-import 'package:zenwall/view/categorie_screen.dart';
-import 'package:zenwall/view/search_view.dart';
-import 'package:zenwall/widget/widget.dart';
+import 'package:zenwall/widgets/brand_name.dart';
+import 'package:zenwall/widgets/category_tile.dart';
+import 'package:zenwall/widgets/search_box.dart';
+import 'package:zenwall/widgets/wallpaper.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -19,10 +17,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<CategorieModel> categories = [];
-
+  List<CategoriesModel> categories = [];
+  final ScrollController _scrollController = ScrollController();
   int noOfImageToLoad = 30;
   List<PhotosModel> photos = [];
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -33,13 +32,15 @@ class _HomeState extends State<Home> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        noOfImageToLoad = noOfImageToLoad + 30;
-        getTrendingWallpaper();
+        loadMoreWallpapers();
       }
     });
   }
 
-  getTrendingWallpaper() async {
+  Future<void> getTrendingWallpaper() async {
+    setState(() {
+      isLoading = true;
+    });
     await http.get(
         Uri.parse(
             "https://api.pexels.com/v1/curated?per_page=$noOfImageToLoad&page=1"),
@@ -51,213 +52,92 @@ class _HomeState extends State<Home> {
         photos.add(photosModel);
       });
 
-      setState(() {});
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
-  TextEditingController searchController = TextEditingController();
-
-  final ScrollController _scrollController = ScrollController();
-
-  _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
+  Future<void> loadMoreWallpapers() async {
+    noOfImageToLoad += 30;
+    await getTrendingWallpaper();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: brandName(),
-        elevation: 0.0,
-      ),
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xfff5f8fd),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                      child: TextField(
-                    controller: searchController,
-                    decoration: const InputDecoration(
-                        hintText: "search wallpapers",
-                        border: InputBorder.none),
-                  )),
-                  InkWell(
-                      onTap: () {
-                        if (searchController.text != "") {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SearchView(
-                                        search: searchController.text,
-                                      )));
-                        }
-                      },
-                      child: const Icon(Icons.search))
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            SizedBox(
-              height: 80,
-              child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: categories.length,
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    /// Create List Item tile
-                    return CategoriesTile(
-                      imgUrls: categories[index].imgUrl!,
-                      categorie: categories[index].categorieName!,
-                    );
-                  }),
-            ),
-            wallPaper(photos, context),
-            const SizedBox(
-              height: 24,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text(
-                  "Photos provided By ",
-                  style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 12,
-                      fontFamily: 'Overpass'),
+        body: SafeArea(
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverAppBar(
+            pinned: false,
+            title: brandName(),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SearchBoxDelegate(),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const SizedBox(
+                  height: 16,
                 ),
-                GestureDetector(
-                  onTap: () {
-                    _launchURL("https://www.pexels.com/");
-                  },
-                  child: const Text(
-                    "Pexels",
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 12,
-                        fontFamily: 'Overpass'),
+                SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: categories.length,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      return CategoriesTile(
+                        imgUrls: categories[index].imgUrl!,
+                        categorie: categories[index].categoriesName!,
+                      );
+                    },
                   ),
-                )
+                ),
+                Wallpaper(listPhotos: photos),
+                const SizedBox(height: 24),
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(),
+                        )),
+                  ),
               ],
             ),
-            const SizedBox(
-              height: 24,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
 
-class CategoriesTile extends StatelessWidget {
-  final String imgUrls, categorie;
-
-  const CategoriesTile(
-      {super.key, required this.imgUrls, required this.categorie});
+class _SearchBoxDelegate extends SliverPersistentHeaderDelegate {
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      alignment: Alignment.center,
+      child: const SearchBox(),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => CategorieScreen(
-                      categorie: categorie,
-                    )));
-      },
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        child: kIsWeb
-            ? Column(
-                children: <Widget>[
-                  ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: kIsWeb
-                          ? Image.network(
-                              imgUrls,
-                              height: 50,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: imgUrls,
-                              height: 50,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Container(
-                      width: 100,
-                      alignment: Alignment.center,
-                      child: Text(
-                        categorie,
-                        style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'Overpass'),
-                      )),
-                ],
-              )
-            : Stack(
-                children: <Widget>[
-                  ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: kIsWeb
-                          ? Image.network(
-                              imgUrls,
-                              height: 50,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: imgUrls,
-                              height: 50,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )),
-                  Container(
-                    height: 50,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.black26,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  Container(
-                      height: 50,
-                      width: 100,
-                      alignment: Alignment.center,
-                      child: Text(
-                        categorie,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Overpass'),
-                      ))
-                ],
-              ),
-      ),
-    );
+  double get maxExtent => 60; // Height of the search box
+  @override
+  double get minExtent => 60; // Minimum height when scrolled
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
   }
 }

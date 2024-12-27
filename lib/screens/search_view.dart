@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:zenwall/data/data.dart';
 import 'package:zenwall/models/photos_model.dart';
-import 'package:zenwall/widget/widget.dart';
+import 'package:zenwall/widgets/brand_name.dart';
+import 'package:zenwall/widgets/wallpaper.dart';
 
 class SearchView extends StatefulWidget {
   final String search;
@@ -90,7 +91,7 @@ class _SearchViewState extends State<SearchView> {
             const SizedBox(
               height: 30,
             ),
-            wallPaper(photos, context),
+            Wallpaper(listPhotos: photos),
           ],
         ),
       ),
