@@ -1,8 +1,17 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wallpaper/wallpaper.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -146,78 +155,103 @@ class _ImageViewState extends State<ImageView> {
                   const SizedBox(
                     height: 20,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: <Widget>[
-                      InkWell(
-                        onTap: () async {
-                          var width = MediaQuery.of(context).size.width;
-                          var height = MediaQuery.of(context).size.height;
-                          await downloadImage(context, widget.imgPath);
-                          home = await Wallpaper.homeScreen(
-                              options: RequestSizeOptions.resizeFit,
-                              width: width,
-                              location: DownloadLocation.applicationDirectory,
-                              height: height);
-                          setState(() {
-                            downloading = false;
-                            home = home;
-                          });
-                        },
-                        child: const Column(
+                  Platform.isAndroid
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
-                            Icon(Icons.home),
-                            SizedBox(
-                              height: 5,
+                            InkWell(
+                              onTap: () async {
+                                var width = MediaQuery.of(context).size.width;
+                                var height = MediaQuery.of(context).size.height;
+                                await downloadImage(context, widget.imgPath);
+                                home = await Wallpaper.homeScreen(
+                                    options: RequestSizeOptions.resizeFit,
+                                    width: width,
+                                    location:
+                                        DownloadLocation.applicationDirectory,
+                                    height: height);
+                                setState(() {
+                                  downloading = false;
+                                  home = home;
+                                });
+                              },
+                              child: const Column(
+                                children: <Widget>[
+                                  Icon(Icons.home),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text("Home"),
+                                ],
+                              ),
                             ),
-                            Text("Home"),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          await downloadImage(context, widget.imgPath);
-                          lock = await Wallpaper.lockScreen(
-                            location: DownloadLocation.applicationDirectory,
-                          );
-                          setState(() {
-                            downloading = false;
-                            lock = lock;
-                          });
-                        },
-                        child: const Column(
-                          children: <Widget>[
-                            Icon(Icons.lock_open_rounded),
-                            SizedBox(
-                              height: 5,
+                            InkWell(
+                              onTap: () async {
+                                await downloadImage(context, widget.imgPath);
+                                lock = await Wallpaper.lockScreen(
+                                  location:
+                                      DownloadLocation.applicationDirectory,
+                                );
+                                setState(() {
+                                  downloading = false;
+                                  lock = lock;
+                                });
+                              },
+                              child: const Column(
+                                children: <Widget>[
+                                  Icon(Icons.lock_open_rounded),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text("Lock Screen"),
+                                ],
+                              ),
                             ),
-                            Text("Lock Screen"),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          await downloadImage(context, widget.imgPath);
-                          both = await Wallpaper.bothScreen(
-                            location: DownloadLocation.applicationDirectory,
-                          );
-                          setState(() {
-                            downloading = false;
-                            both = both;
-                          });
-                        },
-                        child: const Column(
-                          children: <Widget>[
-                            Icon(Icons.system_security_update_good_outlined),
-                            SizedBox(
-                              height: 5,
+                            InkWell(
+                              onTap: () async {
+                                await downloadImage(context, widget.imgPath);
+                                both = await Wallpaper.bothScreen(
+                                  location:
+                                      DownloadLocation.applicationDirectory,
+                                );
+                                setState(() {
+                                  downloading = false;
+                                  both = both;
+                                });
+                              },
+                              child: const Column(
+                                children: <Widget>[
+                                  Icon(Icons
+                                      .system_security_update_good_outlined),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text("Both"),
+                                ],
+                              ),
                             ),
-                            Text("Both"),
                           ],
-                        ),
-                      ),
-                    ],
-                  ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            InkWell(
+                              onTap: () async {
+                                await saveImageFromUrl(context, widget.imgPath);
+                              },
+                              child: const Column(
+                                children: <Widget>[
+                                  Icon(Icons
+                                      .system_security_update_good_outlined),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text("Download"),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
                 ],
               ),
             );
@@ -247,6 +281,57 @@ class _ImageViewState extends State<ImageView> {
         downloading = false;
       });
     });
+  }
+
+  Future<void> saveImageFromUrl(BuildContext context, String imageUrl) async {
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      try {
+        final response = await http.get(Uri.parse(imageUrl));
+        if (response.statusCode == 200) {
+          Uint8List imageData = response.bodyBytes;
+
+          final result = await ImageGallerySaver.saveImage(
+            imageData,
+            quality: 100,
+            name: "downloaded_image",
+          );
+          Navigator.of(context).pop();
+          if (result['isSuccess']) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Download complete! Image saved to gallery.'),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to save the image.'),
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Failed to download image. HTTP Status: ${response.statusCode}'),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Permission denied. Unable to save image.'),
+        ),
+      );
+    }
   }
 
   Widget imageDownloadDialog() {

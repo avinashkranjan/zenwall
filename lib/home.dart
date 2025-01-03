@@ -66,57 +66,60 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.grey[50],
         body: SafeArea(
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverAppBar(
-            pinned: false,
-            title: brandName(),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SearchBoxDelegate(),
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 16,
+          bottom: false,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverAppBar(
+                pinned: false,
+                backgroundColor: Colors.grey[50],
+                title: brandName(),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SearchBoxDelegate(),
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: categories.length,
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) {
+                          return CategoriesTile(
+                            imgUrls: categories[index].imgUrl!,
+                            categorie: categories[index].categoriesName!,
+                          );
+                        },
+                      ),
+                    ),
+                    Wallpaper(listPhotos: photos),
+                    const SizedBox(height: 24),
+                    if (isLoading)
+                      const Center(
+                        child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(),
+                            )),
+                      ),
+                  ],
                 ),
-                SizedBox(
-                  height: 80,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: categories.length,
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return CategoriesTile(
-                        imgUrls: categories[index].imgUrl!,
-                        categorie: categories[index].categoriesName!,
-                      );
-                    },
-                  ),
-                ),
-                Wallpaper(listPhotos: photos),
-                const SizedBox(height: 24),
-                if (isLoading)
-                  const Center(
-                    child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(),
-                        )),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 }
 
@@ -125,7 +128,7 @@ class _SearchBoxDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: Colors.grey[50],
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       alignment: Alignment.center,
       child: const SearchBox(),
@@ -133,9 +136,9 @@ class _SearchBoxDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 60; // Height of the search box
+  double get maxExtent => 60;
   @override
-  double get minExtent => 60; // Minimum height when scrolled
+  double get minExtent => 60;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
     return false;
