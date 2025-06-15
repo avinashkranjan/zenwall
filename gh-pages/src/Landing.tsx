@@ -16,7 +16,7 @@ function Landing() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Image className="w-8 h-8 text-purple-400" />
-            <span className="text-2xl font-bold text-white">ZenWall</span>
+            <span className="text-2xl font-bold text-white">Miniflex</span>
           </div>
           <div className="hidden md:flex space-x-8">
             <a
@@ -125,11 +125,11 @@ function Landing() {
       <section id="download" className="py-20 bg-black/20">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-white mb-8">
-            Get ZenWall Today
+            Get Miniflex Today
           </h2>
           <p className="text-gray-300 text-lg mb-12 max-w-2xl mx-auto">
-            Transform your device with stunning wallpapers. Download ZenWall now
-            and start customizing your screen.
+            Transform your device with stunning wallpapers. Download Miniflex
+            now and start customizing your screen.
           </p>
           <div className="flex justify-center gap-6">
             <DownloadButton
@@ -146,7 +146,7 @@ function Landing() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <Image className="w-6 h-6 text-purple-400" />
-              <span className="text-xl font-bold text-white">ZenWall</span>
+              <span className="text-xl font-bold text-white">Miniflex</span>
             </div>
             <div className="flex space-x-6">
               <Link
@@ -165,7 +165,7 @@ function Landing() {
           </div>
           <div className="mt-8 text-center text-gray-400">
             <p>
-              &copy; {new Date().getFullYear()} ZenWall. All rights reserved.
+              &copy; {new Date().getFullYear()} Miniflex. All rights reserved.
             </p>
           </div>
         </div>

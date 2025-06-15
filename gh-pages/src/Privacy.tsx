@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Image className="w-8 h-8 text-purple-400" />
-            <span className="text-2xl font-bold text-white">ZenWall</span>
+            <span className="text-2xl font-bold text-white">Miniflex</span>
           </Link>
         </div>
       </nav>
@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
                 If you have any questions about our privacy policy, please
                 contact us at:
               </p>
-              <p className="text-purple-400">privacy@zenwall.com</p>
+              <p className="text-purple-400">privacy@miniflex.com</p>
             </section>
 
             <section className="space-y-4">
@@ -122,7 +122,7 @@ export default function PrivacyPolicy() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <Image className="w-6 h-6 text-purple-400" />
-              <span className="text-xl font-bold text-white">ZenWall</span>
+              <span className="text-xl font-bold text-white">Miniflex</span>
             </div>
             <div className="flex space-x-6">
               <Link
@@ -141,7 +141,7 @@ export default function PrivacyPolicy() {
           </div>
           <div className="mt-8 text-center text-gray-400">
             <p>
-              &copy; {new Date().getFullYear()} ZenWall. All rights reserved.
+              &copy; {new Date().getFullYear()} Miniflex. All rights reserved.
             </p>
           </div>
         </div>
