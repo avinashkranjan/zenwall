@@ -7,6 +7,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/privacy-policy" element={<Privacy />} />
     </Routes>
   );
 }
