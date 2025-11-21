@@ -82,4 +82,4 @@ If you encounter any issues or have suggestions, please open an issue on GitHub 
 
 ---
 
-Happy wallpaper hunting with ZenWall! 🌟
+Happy wallpaper hunting with ZenWall! 🤩
