@@ -11,11 +11,6 @@
 - **Permissions Management:** Seamlessly handle required permissions for saving wallpapers.
 - **Modern UI:** Enjoy a clean and intuitive design optimized for smooth user experience.
 
-## Screenshots
-
-
----
-
 ## Installation
 
 1. **Clone the Repository:**
